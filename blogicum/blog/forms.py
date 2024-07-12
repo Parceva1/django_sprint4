@@ -1,12 +1,12 @@
 from django import forms
-
 from .models import Post, Comment, User
 
 
 class PostForm(forms.ModelForm):
     class Meta:
         model = Post
-        exclude = ('author',)
+        fields = ['title', 'text', 'pub_date',
+                  'location', 'category', 'image', 'is_published']
 
 
 class CommentForm(forms.ModelForm):

@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Category, Post, Location, Comment
+from .models import Category, Post, Location
 from .constants import LIST_PER_PAGE
 
 admin.site.empty_value_display = 'Не задано'
@@ -29,14 +29,6 @@ class LocationAdmin(admin.ModelAdmin):
     list_per_page = LIST_PER_PAGE
 
 
-class CommentAdmin(admin.ModelAdmin):
-    list_display = ('__str__', 'post', 'author', 'created_at')
-    list_filter = ('post', 'author', 'created_at')
-    search_fields = ('text', 'author')
-    list_per_page = LIST_PER_PAGE
-
-
 admin.site.register(Location, LocationAdmin)
 admin.site.register(Category, CategoryAdmin)
 admin.site.register(Post, PostAdmin)
-admin.site.register(Comment, CommentAdmin)
