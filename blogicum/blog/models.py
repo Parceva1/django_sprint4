@@ -26,14 +26,14 @@ class BaseModel(models.Model):
 class Category(BaseModel):
     title = models.CharField(
         max_length=MAX_LENGTH,
-        verbose_name=('Заголовок')
+        verbose_name='Заголовок'
     )
     description = models.TextField(
-        verbose_name=('Описание')
+        verbose_name='Описание'
     )
     slug = models.SlugField(
         unique=True,
-        verbose_name=('Идентификатор'),
+        verbose_name='Идентификатор',
         help_text=('Идентификатор страницы для URL; '
                    'разрешены символы латиницы, цифры, дефис и подчёркивание.')
     )
@@ -117,7 +117,8 @@ class Post(BaseModel):
 class Comment(models.Model):
     post = models.ForeignKey(Post,
                              on_delete=models.CASCADE, related_name='comments')
-    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    author = models.ForeignKey(User, on_delete=models.CASCADE,
+                               related_name='comments')
     text = models.TextField(verbose_name='Текст комментария')
     created_at = models.DateTimeField(auto_now_add=True)
 
