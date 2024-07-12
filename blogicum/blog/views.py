@@ -10,7 +10,7 @@ from django.http import Http404
 from .models import Post, Category, Comment
 from .forms import PostForm, CommentForm, ProfileEditForm
 from .constants import LIST_PER_PAGE
-from .querysets import get_published_posts, get_user_posts
+from .querysets import get_published_posts
 
 
 def get_recent_posts():
