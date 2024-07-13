@@ -1,31 +1,18 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.utils import timezone
 from django.core.paginator import Paginator
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.db.models import Count
-from django.http import Http404
 
 from .models import Post, Category, Comment
 from .forms import PostForm, CommentForm, ProfileEditForm
 from .constants import LIST_PER_PAGE
-from .querysets import get_published_posts
-
-
-def get_recent_posts():
-    return Post.objects.filter(
-        category__is_published=True,
-        pub_date__lte=timezone.now(),
-        is_published=True
-    ).annotate(
-        comment_count=Count('comments')
-    ).order_by('-pub_date')
+from .querysets import get_published_posts, comment_count
 
 
 def index(request):
     template = 'blog/index.html'
-    posts = get_recent_posts().order_by('-pub_date')
+    posts = get_published_posts()
     paginator = Paginator(posts, LIST_PER_PAGE)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -58,11 +45,7 @@ def category_posts(request, slug):
 
 
 def post_detail(request, post_id):
-
-    post = get_object_or_404(Post, pk=post_id)
-
-    if not post.is_published and post.author != request.user:
-        raise Http404("Пост не найден")
+    post = get_object_or_404(get_published_posts(request), pk=post_id)
 
     comments = post.comments.all()
     form = CommentForm()
@@ -91,12 +74,7 @@ def create_post(request):
     return render(request, 'blog/create.html', {'form': form})
 
 
-'''При добавлении @login_required не проходятся автотесты, появляется ошибка
- Убедитесь, что при отправке формы редактирования поста неаутентифицированным
- пользователем он перенаправляется на страницу аутентификации.
- Если убрать @login_required всё работает и ошибок не появляется'''
-
-
+@login_required
 def edit_post(request, post_id):
     post = get_object_or_404(Post, pk=post_id)
     if post.author != request.user:
@@ -128,17 +106,14 @@ def delete_post(request, post_id):
 def profile(request, username):
     user = get_object_or_404(User, username=username)
 
-    posts = get_published_posts().filter(author=user).annotate(
-        comment_count=Count('comments')
-    ).order_by('-pub_date')
-
     if request.user == user:
         is_owner = True
-        posts = Post.objects.filter(author=user).annotate(
-            comment_count=Count('comments')
-        ).order_by('-pub_date')
+        posts = comment_count(user.posts.order_by('-pub_date'))
     else:
         is_owner = False
+        posts = comment_count(
+            get_published_posts().filter(author=user)
+        )
 
     paginator = Paginator(posts, LIST_PER_PAGE)
     page_number = request.GET.get('page')
