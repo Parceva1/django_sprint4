@@ -12,7 +12,7 @@ from .querysets import get_published_posts, comment_count
 
 def index(request):
     template = 'blog/index.html'
-    posts = get_published_posts()
+    posts = comment_count(get_published_posts())
     paginator = Paginator(posts, LIST_PER_PAGE)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -45,7 +45,10 @@ def category_posts(request, slug):
 
 
 def post_detail(request, post_id):
-    post = get_object_or_404(get_published_posts(request), pk=post_id)
+
+    post = Post.objects.filter(pk=post_id, author=request.user).first()
+    if not post:
+        post = get_object_or_404(get_published_posts(), pk=post_id)
 
     comments = post.comments.all()
     form = CommentForm()
@@ -108,13 +111,12 @@ def profile(request, username):
 
     if request.user == user:
         is_owner = True
-        posts = comment_count(user.posts.order_by('-pub_date'))
+        posts = user.posts.order_by('-pub_date')
     else:
         is_owner = False
-        posts = comment_count(
-            get_published_posts().filter(author=user)
-        )
+        posts = get_published_posts().filter(author=user)
 
+    posts = comment_count(posts)
     paginator = Paginator(posts, LIST_PER_PAGE)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
